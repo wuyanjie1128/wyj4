@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Web UI for "Interactive Poster" with CSV palette support
+# Web UI for "Interactive Poster" with CSV palette support (English version)
 # Run: streamlit run app.py
 
 import io
@@ -149,42 +149,42 @@ def draw_poster(n_layers=8, wobble=0.15, palette_mode="pastel", seed=0, uploaded
 # Streamlit UI
 # ----------------------------
 st.set_page_config(page_title="Interactive Poster", layout="wide")
-st.title("🎨 Interactive Poster (Web)")
-st.caption("支持从 CSV 读取调色板（R,G,B 列；值可为 0..1 或 0..255）。")
+st.title("🎨 Interactive Poster (Web Version)")
+st.caption("Supports palette input from CSV (columns R,G,B; values can be in 0–1 or 0–255).")
 
 with st.sidebar:
     st.header("Controls")
     n_layers = st.slider("Layers", min_value=3, max_value=20, value=8, step=1)
     wobble = st.slider("Wobble", min_value=0.01, max_value=0.50, value=0.15, step=0.01)
-    palette_mode = st.selectbox("palette_mode", options=["pastel", "vivid", "mono", "random", "csv"], index=0)
+    palette_mode = st.selectbox("Palette Mode", options=["pastel", "vivid", "mono", "random", "csv"], index=0)
     seed = st.number_input("Seed", min_value=0, max_value=999999, value=0, step=1)
 
     uploaded_df = None
     uploaded_file = None
     if palette_mode == "csv":
-        uploaded_file = st.file_uploader("上传 palette.csv（含 R,G,B 列）", type=["csv"])
+        uploaded_file = st.file_uploader("Upload palette.csv (with R,G,B columns)", type=["csv"])
         if uploaded_file is not None:
             try:
                 uploaded_df = pd.read_csv(uploaded_file)
-                st.success("已载入上传的 CSV 调色板。")
+                st.success("CSV palette loaded successfully.")
             except Exception as e:
-                st.error(f"CSV 解析失败：{e}")
+                st.error(f"Failed to parse CSV: {e}")
 
     col_btn1, col_btn2 = st.columns(2)
     with col_btn1:
-        if st.button("🔀 随机种子"):
+        if st.button("🔀 Random Seed"):
             seed = random.randint(0, 999999)
             st.session_state["_seed_override"] = seed
     with col_btn2:
-        if st.button("♻️ 重绘"):
-            pass  # Streamlit 会根据控件状态自动重绘
+        if st.button("♻️ Redraw"):
+            pass  # Streamlit auto-refreshes based on widget state
 
-# 若随机按钮更新了 seed，则覆盖展示
+# Apply random seed if changed
 if "_seed_override" in st.session_state:
     seed = int(st.session_state["_seed_override"])
-    st.info(f"当前种子：{seed}")
+    st.info(f"Current seed: {seed}")
 
-# 绘制
+# Draw
 fig = draw_poster(
     n_layers=n_layers,
     wobble=wobble,
@@ -195,21 +195,21 @@ fig = draw_poster(
 
 st.pyplot(fig, use_container_width=True)
 
-# 下载按钮
+# Download button
 png_buf = io.BytesIO()
 timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
 filename = f"poster_{palette_mode}_seed{seed}_{timestamp}.png"
 fig.savefig(png_buf, format="png", dpi=300, bbox_inches="tight", pad_inches=0.1)
 plt.close(fig)
 st.download_button(
-    label="⬇️ 下载 PNG",
+    label="⬇️ Download PNG",
     data=png_buf.getvalue(),
     file_name=filename,
     mime="image/png",
 )
 
-# CSV 提示信息
+# CSV status info
 if palette_mode == "csv" and uploaded_df is None and not os.path.exists(PALETTE_CSV):
-    st.warning("未检测到上传的 CSV，也未在工作目录发现 palette.csv。已使用内置柔和色作为后备方案。")
+    st.warning("No uploaded CSV or local palette.csv found. Using default pastel palette.")
 elif palette_mode == "csv" and uploaded_df is None and os.path.exists(PALETTE_CSV):
-    st.success("已从本地文件 palette.csv 载入调色板。")
+    st.success("Loaded palette from local palette.csv.")
